@@ -1,3 +1,3 @@
 # XMLtools
 
-some tools to mainform the xml model file of FERMI-LAT.
+some tools to mainform the XML model file of FERMI-LAT.

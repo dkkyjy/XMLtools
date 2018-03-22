@@ -19,7 +19,7 @@ class NewModel(object):
         self.root = ET.Element('source_library', title='source_library')
 
     def AddPointSource(self, srcName, SpectralType, parameters, skycrd_C):
-        source = ET.SubElement(self.root, 'source', name=srcName, type='PointSource')
+        source = ET.Element('source', name=srcName, type='PointSource')
 
         spectrum = ET.SubElement(source, 'spectrum', type=SpectralType)
         for parName, parDict in parameters.items():
@@ -35,7 +35,9 @@ class NewModel(object):
         dec = str(skycrd_C[1])
         ET.SubElement(spatialModel, 'parameter', free='0', max='360.', min='-360.', name='RA', scale='1.0', value=ra)
         ET.SubElement(spatialModel, 'parameter', free='0', max='90.', min='-90.', name='DEC', scale='1.0', value=dec)
-        self.root = ET.fromstring(prettify(self.root))
+
+        source = ET.fromstring(prettify(source))
+        self.root.append(source)
         self.SaveModel(self.filename)
         
 

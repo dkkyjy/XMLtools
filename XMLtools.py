@@ -18,11 +18,11 @@ class NewModel(object):
         self.filename = filename
         self.root = ET.Element('source_library', title='source_library')
 
-    def AddPointSource(self, srcName, SpectralType, parameters, skycrd_C):
+    def AddPointSource(self, srcName, SpectralType, SpectralPars, skycrd_C):
         source = ET.Element('source', name=srcName, type='PointSource')
 
         spectrum = ET.SubElement(source, 'spectrum', type=SpectralType)
-        for parName, parDict in parameters.items():
+        for parName, parDict in SpectralPars.items():
             free = str(parDict['free'])
             scale = str(parDict['scale'])
             value = str(parDict['value'])
@@ -39,7 +39,32 @@ class NewModel(object):
         source = ET.fromstring(prettify(source))
         self.root.append(source)
         self.SaveModel(self.filename)
-        
+
+    def AddDiffuseSource(self, srcName, SpectralType, SpectralPars, SpatialType, SpatialFile, SpatialPar):
+        source = ET.Element('source', name=srcName, type='DiffuseSource')
+
+        spectrum = ET.SubElement(source, 'spectrum', type=SpectralType)
+        for parName, parDict in SpectralPars.items():
+            free = str(parDict['free'])
+            scale = str(parDict['scale'])
+            value = str(parDict['value'])
+            parmin = str(parDict['min'])
+            parmax = str(parDict['max'])
+            ET.SubElement(spectrum, 'parameter', free=free, max=parmax, min=parmin, name=parName, scale=scale, value=value)
+
+        spatialModel = ET.SubElement(source, 'spatialModel', file=SpatialFile, type=SpatialType)
+        name = SpatialPar['name']
+        free = str(SpatialPar['free'])
+        scale = str(SpatialPar['scale'])
+        value = str(SpatialPar['value'])
+        parmin = str(SpatialPar['min'])
+        parmax = str(SpatialPar['max'])
+        ET.SubElement(spatialModel, 'parameter', free=free, max=parmax, min=parmin, name=name, scale=scale, value=value)
+
+        source = ET.fromstring(prettify(source))
+        self.root.append(source)
+        self.SaveModel(self.filename)
+
 
 class LoadModel(NewModel):
     def __init__(self, filename):
@@ -152,15 +177,22 @@ if __name__ == '__main__':
     filename = 'myModel.xml'
     mymodel = NewModel(filename)
 
-    parameters = {'Prefactor': {'free':1, 'max':1000, 'min':0.001, 'scale':1e-9, 'value':1},
-                      'Index': {'free':1, 'max':5, 'min':1, 'scale':-1, 'value':2},
-                      'Scale': {'free':0, 'max':2000, 'min':30, 'scale':1, 'value':100}}
+    SpectralType = 'PowerLaw'
+    SpectralPars = {'Prefactor': {'free':1, 'max':1000, 'min':0.001, 'scale':1e-9, 'value':1},
+                        'Index': {'free':1, 'max':5, 'min':1, 'scale':-1, 'value':2},
+                        'Scale': {'free':0, 'max':2000, 'min':30, 'scale':1, 'value':100}}
     skycrd_C = (83.45, 21.72)
-    mymodel.AddPointSource('myPowerLaw_source', 'PowerLaw', parameters, skycrd_C)
+    mymodel.AddPointSource('myPowerLaw_source', SpectralType, SpectralPars, skycrd_C)
+
+    SpatialType = 'SpatialMap'
+    SpatialFile = 'SpatialMap_source.fits'
+    SpatialPar = {'name': "Normalization", 'free':1, 'min':0.001, 'max':1000, 'scale':1, 'value':100}
+    mymodel.AddDiffuseSource('myDiffuse_source', SpectralType, SpectralPars, SpatialType, SpatialFile, SpatialPar)
+
 
     filename = 'XMLmodel.xml'
     model = LoadModel(filename)
-    model.AddPointSource('myPowerLaw_source', 'PowerLaw', parameters, skycrd_C)
+    model.AddPointSource('myPowerLaw_source', SpectralType, SpectralPars, skycrd_C)
 
     pprint(model.SrcList)
     pprint(model.FixSrcList)

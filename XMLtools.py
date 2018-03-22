@@ -1,8 +1,45 @@
 from pprint import pprint
 from collections import Counter
-import xml.etree.ElementTree as ET
+from xml.etree import ElementTree as ET
+from xml.dom import minidom
 
-class XMLmodel(object):
+def prettify(elem):
+    rough_string = ET.tostring(elem)
+    reparsed = minidom.parseString(rough_string)
+    return reparsed.toprettyxml(indent="")
+
+
+class NewModel(object):
+    def SaveModel(self, filename):
+        tree = ET.ElementTree(self.root)
+        tree.write(filename)
+
+    def __init__(self, filename):
+        self.filename = filename
+        self.root = ET.Element('source_library', title='source_library')
+
+    def AddPointSource(self, srcName, SpectralType, parameters, skycrd_C):
+        source = ET.SubElement(self.root, 'source', name=srcName, type='PointSource')
+
+        spectrum = ET.SubElement(source, 'spectrum', type=SpectralType)
+        for parName, parDict in parameters.items():
+            free = str(parDict['free'])
+            scale = str(parDict['scale'])
+            value = str(parDict['value'])
+            parmin = str(parDict['min'])
+            parmax = str(parDict['max'])
+            ET.SubElement(spectrum, 'parameter', free=free, max=parmax, min=parmin, name=parName, scale=scale, value=value)
+
+        spatialModel = ET.SubElement(source, 'spatialModel', type='SkyDirFunction')
+        ra = str(skycrd_C[0])
+        dec = str(skycrd_C[1])
+        ET.SubElement(spatialModel, 'parameter', free='0', max='360.', min='-360.', name='RA', scale='1.0', value=ra)
+        ET.SubElement(spatialModel, 'parameter', free='0', max='90.', min='-90.', name='DEC', scale='1.0', value=dec)
+        self.root = ET.fromstring(prettify(self.root))
+        self.SaveModel(self.filename)
+        
+
+class LoadModel(NewModel):
     def __init__(self, filename):
         self.filename = filename.split('.xml')[0]
         self.tree = ET.parse(filename)
@@ -87,27 +124,37 @@ class XMLmodel(object):
         parameter = self.root.find('./source[@name="%s"]/spectrum/parameter[@name="%s"]' % (srcName, parName))
         parameter.set('value', str(value))
         outfile = self.filename + '_SetScaledValue_{}_{}_{}.xml'.format(srcName, parName, value)
-        self.tree.write(outfile)
+        self.SaveModel(outfile)
         return self.__init__(outfile)
 
     def SetParScale(self, srcName, parName, scale):
         parameter = self.root.find('./source[@name="%s"]/spectrum/parameter[@name="%s"]' % (srcName, parName))
         parameter.set('scale', str(scale))
         outfile = self.filename + '_SetParScale_{}_{}_{}.xml'.format(srcName, parName, scale)
-        self.tree.write(outfile)
+        self.SaveModel(outfile)
         return self.__init__(outfile)
 
     def SetParFree(self, srcName, parName, free):
         parameter = self.root.find('./source[@name="%s"]/spectrum/parameter[@name="%s"]' % (srcName, parName))
         parameter.set('free', str(free))
         outfile = self.filename + '_SetFree_{}_{}_{}.xml'.format(srcName, parName, free)
-        self.tree.write(outfile)
+        self.SaveModel(outfile)
         return self.__init__(outfile)
 
 
 if __name__ == '__main__':
-    modelfile = 'XMLmodel.xml'
-    model = XMLmodel(modelfile)
+    filename = 'myModel.xml'
+    mymodel = NewModel(filename)
+
+    parameters = {'Prefactor': {'free':1, 'max':1000, 'min':0.001, 'scale':1e-9, 'value':1},
+                      'Index': {'free':1, 'max':5, 'min':1, 'scale':-1, 'value':2},
+                      'Scale': {'free':0, 'max':2000, 'min':30, 'scale':1, 'value':100}}
+    skycrd_C = (83.45, 21.72)
+    mymodel.AddPointSource('myPowerLaw_source', 'PowerLaw', parameters, skycrd_C)
+
+    filename = 'XMLmodel.xml'
+    model = LoadModel(filename)
+    model.AddPointSource('myPowerLaw_source', 'PowerLaw', parameters, skycrd_C)
 
     pprint(model.SrcList)
     pprint(model.FixSrcList)

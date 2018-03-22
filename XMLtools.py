@@ -98,8 +98,8 @@ class LoadModel(NewModel):
                     except:
                         pass
 
-        self.NumDict = dict(Counter(self.SrcList))
-        self.SrcList = list(self.NumDict.keys())
+        self.ParsNumDict = dict(Counter(self.SrcList))
+        self.SrcList = list(self.ParsNumDict.keys())
         self.FreeNumDict = dict(Counter(self.FreeSrcList))
         self.FreeSrcList = list(self.FreeNumDict.keys())
 
@@ -200,7 +200,7 @@ if __name__ == '__main__':
     pprint(model.ParList)
     pprint(model.FixParList)
     pprint(model.FreeParList)
-    pprint(model.NumDict)
+    pprint(model.ParsNumDict)
     pprint(model.FreeNumDict)
 
     srcName = 'PowerLaw_source'

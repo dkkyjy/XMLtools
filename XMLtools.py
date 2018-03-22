@@ -43,7 +43,8 @@ class NewModel(object):
 
 class LoadModel(NewModel):
     def __init__(self, filename):
-        self.filename = filename.split('.xml')[0]
+        self.basename = filename.split('.xml')[0]
+        self.filename = filename
         self.tree = ET.parse(filename)
         self.root = self.tree.getroot()
 
@@ -125,23 +126,26 @@ class LoadModel(NewModel):
     def SetParScaledValue(self, srcName, parName, value):
         parameter = self.root.find('./source[@name="%s"]/spectrum/parameter[@name="%s"]' % (srcName, parName))
         parameter.set('value', str(value))
-        outfile = self.filename + '_SetScaledValue_{}_{}_{}.xml'.format(srcName, parName, value)
+        outfile = self.basename + '_SetScaledValue_{}_{}_{}.xml'.format(srcName, parName, value)
         self.SaveModel(outfile)
-        return self.__init__(outfile)
 
     def SetParScale(self, srcName, parName, scale):
         parameter = self.root.find('./source[@name="%s"]/spectrum/parameter[@name="%s"]' % (srcName, parName))
         parameter.set('scale', str(scale))
-        outfile = self.filename + '_SetParScale_{}_{}_{}.xml'.format(srcName, parName, scale)
+        outfile = self.basename + '_SetParScale_{}_{}_{}.xml'.format(srcName, parName, scale)
         self.SaveModel(outfile)
-        return self.__init__(outfile)
 
     def SetParFree(self, srcName, parName, free):
         parameter = self.root.find('./source[@name="%s"]/spectrum/parameter[@name="%s"]' % (srcName, parName))
         parameter.set('free', str(free))
-        outfile = self.filename + '_SetFree_{}_{}_{}.xml'.format(srcName, parName, free)
+        outfile = self.basename + '_SetFree_{}_{}_{}.xml'.format(srcName, parName, free)
         self.SaveModel(outfile)
-        return self.__init__(outfile)
+
+    def DelSource(self, srcName):
+        source = self.root.find('./source[@name="%s"]' % srcName)
+        self.root.remove(source)
+        outfile = self.basename + '_DelSource_{}.xml'.format(srcName)
+        self.SaveModel(outfile)
 
 
 if __name__ == '__main__':
@@ -182,3 +186,5 @@ if __name__ == '__main__':
     model.SetParScaledValue(srcName, parName, 1)
     model.SetParScale(srcName, parName, 1e-10)
     model.SetParFree(srcName, parName, 0)
+
+    model.DelSource('myPowerLaw_source')

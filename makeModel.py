@@ -23,8 +23,8 @@ def FindSource(catalog, skycrd0_C, srcReg, outfile):
 
 
 if __name__ == '__main__':
-    skycrd0_C = (sys.argv[1], sys.argv[2])
-    srcReg = 5
+    skycrd0_C = (float(sys.argv[1]), float(ys.argv[2]))
+    srcReg = float(sys.argv[3])
     catalog = 'PointSource.xml'
     outfile = 'myModel.xml'
     FindSource(catalog, skycrd0_C, srcReg, outfile)

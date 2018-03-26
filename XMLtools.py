@@ -3,6 +3,7 @@ from collections import Counter
 from xml.etree import ElementTree as ET
 from xml.dom import minidom
 
+
 def prettify(elem):
     rough_string = ET.tostring(elem)
     reparsed = minidom.parseString(rough_string)
@@ -14,56 +15,79 @@ class NewModel(object):
         tree = ET.ElementTree(self.root)
         tree.write(filename)
 
-    def __init__(self, filename):
-        self.filename = filename
+    def __init__(self):
         self.root = ET.Element('source_library', title='source_library')
 
-    def AddPointSource(self, srcName, SpectralType, SpectralPars, skycrd_C):
+    def AddSrcEle(self, srcName, srcEle):
+        source = self.root.find('./source[@name="%s"]' % srcName)
+        source.extend(srcEle)
+
+    def AddSpectialEle(self, srcName, spectialEle):
+        spectrum = self.root.find('./source[@name="%s"]/spectrum' % srcName)
+        spectrum.extend(spectialEle)
+
+    def AddSpatialEle(self, srcName, spatialEle):
+        spatialModel = self.root.find('./source[@name="%s"]/spatialModel' % srcName)
+        spatialModel.extend(spatialEle)
+
+    def AddPointSource(self, srcName, SpectralType=None, SpectralPars=None, skycrd_C=None):
         source = ET.Element('source', name=srcName, type='PointSource')
 
-        spectrum = ET.SubElement(source, 'spectrum', type=SpectralType)
-        for parName, parDict in SpectralPars.items():
-            free = str(parDict['free'])
-            scale = str(parDict['scale'])
-            value = str(parDict['value'])
-            parmin = str(parDict['min'])
-            parmax = str(parDict['max'])
-            ET.SubElement(spectrum, 'parameter', free=free, max=parmax, min=parmin, name=parName, scale=scale, value=value)
+        if SpectralType:
+            spectrum = ET.SubElement(source, 'spectrum', type=SpectralType)
+        if SpectralPars:
+            for parName, parDict in SpectralPars.items():
+                free = str(parDict['free'])
+                scale = str(parDict['scale'])
+                value = str(parDict['value'])
+                parmin = str(parDict['min'])
+                parmax = str(parDict['max'])
+                ET.SubElement(spectrum, 'parameter', free=free, max=parmax, min=parmin, name=parName, scale=scale, value=value)
 
-        spatialModel = ET.SubElement(source, 'spatialModel', type='SkyDirFunction')
-        ra = str(skycrd_C[0])
-        dec = str(skycrd_C[1])
-        ET.SubElement(spatialModel, 'parameter', free='0', max='360.', min='-360.', name='RA', scale='1.0', value=ra)
-        ET.SubElement(spatialModel, 'parameter', free='0', max='90.', min='-90.', name='DEC', scale='1.0', value=dec)
+        if SpectralType:
+            spatialModel = ET.SubElement(source, 'spatialModel', type='SkyDirFunction')
+        if skycrd_C:
+            ra = str(skycrd_C[0])
+            dec = str(skycrd_C[1])
+            ET.SubElement(spatialModel, 'parameter', free='0', max='360.', min='-360.', name='RA', scale='1.0', value=ra)
+            ET.SubElement(spatialModel, 'parameter', free='0', max='90.', min='-90.', name='DEC', scale='1.0', value=dec)
 
-        source = ET.fromstring(prettify(source))
+        try:
+            source = ET.fromstring(prettify(source))
+        except:
+            pass
         self.root.append(source)
-        self.SaveModel(self.filename)
 
-    def AddDiffuseSource(self, srcName, SpectralType, SpectralPars, SpatialType, SpatialFile, SpatialPar):
+    def AddDiffuseSource(self, srcName, SpectralType=None, SpectralPars=None, SpatialType=None, SpatialFile=None, SpatialPar=None):
         source = ET.Element('source', name=srcName, type='DiffuseSource')
 
-        spectrum = ET.SubElement(source, 'spectrum', type=SpectralType)
-        for parName, parDict in SpectralPars.items():
-            free = str(parDict['free'])
-            scale = str(parDict['scale'])
-            value = str(parDict['value'])
-            parmin = str(parDict['min'])
-            parmax = str(parDict['max'])
-            ET.SubElement(spectrum, 'parameter', free=free, max=parmax, min=parmin, name=parName, scale=scale, value=value)
+        if SpectralType:
+            spectrum = ET.SubElement(source, 'spectrum', type=SpectralType)
+        if SpectralPars:
+            for parName, parDict in SpectralPars.items():
+                free = str(parDict['free'])
+                scale = str(parDict['scale'])
+                value = str(parDict['value'])
+                parmin = str(parDict['min'])
+                parmax = str(parDict['max'])
+                ET.SubElement(spectrum, 'parameter', free=free, max=parmax, min=parmin, name=parName, scale=scale, value=value)
 
-        spatialModel = ET.SubElement(source, 'spatialModel', file=SpatialFile, type=SpatialType)
-        name = SpatialPar['name']
-        free = str(SpatialPar['free'])
-        scale = str(SpatialPar['scale'])
-        value = str(SpatialPar['value'])
-        parmin = str(SpatialPar['min'])
-        parmax = str(SpatialPar['max'])
-        ET.SubElement(spatialModel, 'parameter', free=free, max=parmax, min=parmin, name=name, scale=scale, value=value)
+        if SpatialFile and SpatialType:
+            spatialModel = ET.SubElement(source, 'spatialModel', file=SpatialFile, type=SpatialType)
+        if SpatialPar:
+            name = SpatialPar['name']
+            free = str(SpatialPar['free'])
+            scale = str(SpatialPar['scale'])
+            value = str(SpatialPar['value'])
+            parmin = str(SpatialPar['min'])
+            parmax = str(SpatialPar['max'])
+            ET.SubElement(spatialModel, 'parameter', free=free, max=parmax, min=parmin, name=name, scale=scale, value=value)
 
-        source = ET.fromstring(prettify(source))
+        try:
+            source = ET.fromstring(prettify(source))
+        except:
+            pass
         self.root.append(source)
-        self.SaveModel(self.filename)
 
 
 class LoadModel(NewModel):
@@ -108,20 +132,48 @@ class LoadModel(NewModel):
         pprint(source.tag)
         pprint(source.attrib)
 
+    def GetSrcEle(self, srcName):
+        source = self.root.find('./source[@name="%s"]' % srcName)
+        return source
+
+    def GetSrcDir(self, srcName):
+        source = self.root.find('./source[@name="%s"]' % srcName)
+        if source.attrib['type'] == 'PointSource':
+            ra = source.find('spatialModel/parameter[@name="RA"]')
+            dec = source.find('spatialModel/parameter[@name="DEC"]')
+            ra = float(ra.attrib['value'])
+            dec = float(dec.attrib['value'])
+        if source.attrib['type'] == 'DiffuseSource':
+            ra = float(source.attrib['RA'])
+            dec = float(source.attrib['DEC'])
+        return (ra, dec)
+        
     def GetSpectralType(self, srcName):
         spectrum = self.root.find('./source[@name="%s"]/spectrum' % srcName)
         pprint(spectrum.tag)
         pprint(spectrum.attrib)
+
+    def GetSpectralEle(self, srcName):
+        spectrum = self.root.find('./source[@name="%s"]/spectrum' % srcName)
+        return spectrum
 
     def GetSpatialType(self, srcName):
         spatialModel = self.root.find('./source[@name="%s"]/spatialModel' % srcName)
         pprint(spatialModel.tag)
         pprint(spatialModel.attrib)
 
+    def GetSpatialEle(self, srcName):
+        spatialModel = self.root.find('./source[@name="%s"]/spatialModel' % srcName)
+        return spatialModel
+
     def GetParInfo(self, srcName, parName):
         parameter = self.root.find('./source[@name="%s"]/spectrum/parameter[@name="%s"]' % (srcName, parName))
         pprint(parameter.tag)
         pprint(parameter.attrib)
+
+    def GetParEle(self, srcName, parName):
+        parameter = self.root.find('./source[@name="%s"]/spectrum/parameter[@name="%s"]' % (srcName, parName))
+        return parameter
 
     def GetParFree(self, srcName, parName):
         parameter = self.root.find('./source[@name="%s"]/spectrum/parameter[@name="%s"]' % (srcName, parName))

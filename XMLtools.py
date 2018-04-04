@@ -278,13 +278,13 @@ if __name__ == '__main__':
     pprint(model.FixSrcList)
     pprint(model.FreeSrcList)
     print(model.SrcNum, model.FixSrcNum, model.FreeSrcNum)
-    pprint(model.ParDict)
-    pprint(model.FixParDict)
-    pprint(model.FreeParDict)
     pprint(model.ParList)
     pprint(model.FixParList)
     pprint(model.FreeParList)
     print(model.ParNum, model.FixParNum, model.FreeParNum)
+    pprint(model.ParDict)
+    pprint(model.FixParDict)
+    pprint(model.FreeParDict)
 
     srcName = 'PowerLaw_source'
     model.GetSrcInfo(srcName)

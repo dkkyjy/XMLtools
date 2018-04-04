@@ -27,7 +27,7 @@ def FindCircleSource(catalog, skycrd0_C, srcRad, freeRad, outfile):
         rad = maptools.Sep(skycrd_C, skycrd0_C)
         if rad > freeRad:
             print(srcName, rad)
-            for parName in model.GetSrcParList(srcName):
+            for parName in model.FreeParDict[srcName]:
                 print(parName)
                 model.SetParFree(srcName, parName, 0)
     model.SaveModel(outfile)

@@ -1,6 +1,8 @@
 import sys
 from FermiST import maptools
 from XMLtools import NewModel, LoadModel
+from astropy.coordinates import SkyCoord
+from regions import PointSkyRegion, write_ds9
 
 
 def FindCircleSource(catalog, skycrd0_C, srcRad, freeRad, outfile):
@@ -21,9 +23,14 @@ def FindCircleSource(catalog, skycrd0_C, srcRad, freeRad, outfile):
             model.AddSrcEle(srcName, srcEle)
     model.SaveModel(outfile)
 
+    regionList = []
     model = LoadModel(outfile)
     for srcName in model.SrcList:
         skycrd_C = catalog.GetSrcDir(srcName)
+        center = SkyCoord(*skycrd_C, unit='deg')
+        region = PointSkyRegion(center)
+        regionList.append(region)
+
         rad = maptools.Sep(skycrd_C, skycrd0_C)
         if rad > freeRad:
             print(srcName, rad)
@@ -31,6 +38,9 @@ def FindCircleSource(catalog, skycrd0_C, srcRad, freeRad, outfile):
                 print(parName)
                 model.SetParFree(srcName, parName, 0)
     model.SaveModel(outfile)
+
+    regfile = outfile.split('.')[0] + '.reg'
+    write_ds9(regionList, regfile)
 
 
 def FindBoxSource(catalog, GorC, srcReg, freeReg, outfile):
@@ -55,9 +65,14 @@ def FindBoxSource(catalog, GorC, srcReg, freeReg, outfile):
             model.AddSrcEle(srcName, srcEle)
     model.SaveModel(outfile)
 
+    regionList = []
     model = LoadModel(outfile)
     for srcName in model.SrcList:
         skycrd_C = catalog.GetSrcDir(srcName)
+        center = SkyCoord(*skycrd_C, unit='deg')
+        region = PointSkyRegion(center)
+        regionList.append(region)
+
         if GorC == 'C':
             xref, yref = skycrd_C
         if GorC == 'G':
@@ -70,6 +85,9 @@ def FindBoxSource(catalog, GorC, srcReg, freeReg, outfile):
                 print(parName)
                 model.SetParFree(srcName, parName, 0)
     model.SaveModel(outfile)
+
+    regfile = outfile.split('.')[0] + '.reg'
+    write_ds9(regionList, regfile)
 
 
 if __name__ == '__main__':

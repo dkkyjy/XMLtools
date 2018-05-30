@@ -148,6 +148,17 @@ class LoadModel(NewModel):
         kwd = parameter.attrib
         return kwd['value']
 
+    def GetParScaledRange(self, srcName, parName):
+        parameter = self.root.find('./source[@name="%s"]/spectrum/parameter[@name="%s"]' % (srcName, parName))
+        kwd = parameter.attrib
+        return (kwd['min'], kwd['max'])
+
+    def SetParScaledRange(self, srcName, parName, min, max):
+        parameter = self.root.find('./source[@name="%s"]/spectrum/parameter[@name="%s"]' % (srcName, parName))
+        parameter.set('min', str(min))
+        parameter.set('max', str(max))
+        self.SaveModel(outfile)
+
     def SetParScaledValue(self, srcName, parName, value):
         parameter = self.root.find('./source[@name="%s"]/spectrum/parameter[@name="%s"]' % (srcName, parName))
         parameter.set('value', str(value))

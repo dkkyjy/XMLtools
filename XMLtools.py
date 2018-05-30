@@ -175,6 +175,7 @@ class LoadModel(NewModel):
         spectrum = self.root.find('./source[@name="%s"]/spectrum' % srcName)
         pprint(spectrum.tag)
         pprint(spectrum.attrib)
+        return spectrum.attrib['type']
 
     def GetSpectralEle(self, srcName):
         spectrum = self.root.find('./source[@name="%s"]/spectrum' % srcName)
@@ -240,7 +241,7 @@ class LoadModel(NewModel):
         parameter = self.root.find('./source[@name="%s"]/spectrum/parameter[@name="%s"]' % (srcName, parName))
         parameter.set('min', str(min))
         parameter.set('max', str(max))
-        self.SaveModel(outfile)
+        #self.
 
     def SetParScaledValue(self, srcName, parName, value):
         parameter = self.root.find('./source[@name="%s"]/spectrum/parameter[@name="%s"]' % (srcName, parName))
@@ -260,6 +261,13 @@ class LoadModel(NewModel):
     def DelSource(self, srcName):
         source = self.root.find('./source[@name="%s"]' % srcName)
         self.root.remove(source)
+        self.GetModelInfo(self.root)
+
+    def FixAllSpectrum(self):
+        for freePar in self.FreeParList:
+            srcName, parName = freePar.split('__')
+            if parName not in ['Prefactor', 'Integral', 'norm', 'Normlization', 'Value']:
+                model.SetParFree(srcName, parName, 0)
         self.GetModelInfo(self.root)
 
 
@@ -283,24 +291,30 @@ if __name__ == '__main__':
 
     filename = 'XMLmodel.xml'
     model = LoadModel(filename)
+    pprint(model.FreeParList)
+    model.FixAllSpectrum()
+    pprint(model.FreeParList)
+    model.SaveModel('test.xml')
     #model.AddPointSource('myPowerLaw_source', SpectralType, SpectralPars, skycrd_C)
 
-    pprint(model.SrcList)
-    pprint(model.FixSrcList)
-    pprint(model.FreeSrcList)
-    print(model.SrcNum, model.FixSrcNum, model.FreeSrcNum)
-    pprint(model.ParList)
-    pprint(model.FixParList)
-    pprint(model.FreeParList)
+    #pprint(model.SrcList)
+    #pprint(model.FixSrcList)
+    #pprint(model.FreeSrcList)
+    #print(model.SrcNum, model.FixSrcNum, model.FreeSrcNum)
+    #pprint(model.ParList)
+    #pprint(model.FixParList)
+    #pprint(model.FreeParList)
+    '''
     print(model.ParNum, model.FixParNum, model.FreeParNum)
     pprint(model.ParDict)
     pprint(model.FixParDict)
     pprint(model.FreeParDict)
 
     srcName = 'PowerLaw_source'
-    model.GetSrcInfo(srcName)
-    model.GetSpectralInfo(srcName)
-    model.GetSpatialInfo(srcName)
+    #model.GetSrcInfo(srcName)
+    #model.GetSpectralInfo(srcName)
+    #model.GetSpatialInfo(srcName)
+    model.GetSpectralPars(srcName)
 
     parName = 'Prefactor'
     model.GetParInfo(srcName, parName)
@@ -314,3 +328,4 @@ if __name__ == '__main__':
     model.SetParFree(srcName, parName, 0)
 
     #model.DelSource('myPowerLaw_source')
+    '''
